@@ -26,7 +26,7 @@ namespace Collapse.Blocks {
         }
 
         protected override void OnMouseUp() {
-            Shake();
+            Trigger(0.5f); //Note: Magic numbers shouldn't be here
         }
         
         /**
@@ -40,10 +40,26 @@ namespace Collapse.Blocks {
             };
         }
 
-        public override void Triger(float delay) {
+        public override void Trigger(float delay)
+        {
             if (IsTriggered) return;
             IsTriggered = true;
-            BoardManager.Instance.TriggerBomb(this);
+            
+            // Clear from board
+            BoardManager.Instance.ClearBlockFromGrid(this);
+            
+            Shake(() =>
+            {
+                BoardManager.Instance.TriggerBomb(this);
+                
+                transform.DOScale(Vector3.zero, delay)
+                    .onComplete += () =>
+                {
+                    // Kill game object
+                    transform.DOKill();
+                    Destroy(gameObject);
+                };
+            });
         }
     }
 }
